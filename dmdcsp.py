@@ -8,52 +8,59 @@ plt.rc('text', usetex=True)
 plt.rc('font', size=24)
 from matplotlib import animation
 from matplotlib import patches
-import snapshots
+import data_loader
 import cvxpy as cp
 import copy
+import control
 
 
-class dmdcsp(object):
-    """Sparsity-Promoting Dynamic Mode Decomposition with Control Class"""
 
-    class stateSpace(object):
+class stateSpace(object):
 
-        def __init__(self, A, B, C):
-            self.A = A
-            self.B = B
-            self.C = C
-            self.nx = A.shape[0]
-            self.nu = B.shape[1]
-            self.ny = C.shape[0]
+    def __init__(self, A, B, C):
+        self.A = A
+        self.B = B
+        self.C = C
+        self.nx = A.shape[0]
+        self.nu = B.shape[1]
+        self.ny = C.shape[0]
 
-        def lsim(self, x0, u):
-            p = u.shape[1]
+    def lsim(self, x0, u):
+        p = u.shape[1]
 
-            if u.shape[0] != self.nu:
-                raise ValueError("u.shape[0] should be equal to the number of inputs")
-            if x0.shape[0] != self.nx:
-                raise ValueError("The size of x0 should be equal to the number of states nx")
+        if u.shape[0] != self.nu:
+            raise ValueError("u.shape[0] should be equal to the number of inputs")
+        if x0.shape[0] != self.nx:
+            raise ValueError("The size of x0 should be equal to the number of states nx")
 
-            x = np.zeros((self.nx, p), dtype=complex)
-            y = np.zeros((self.ny, p))
-            x[:,0] = x0
-            y[:,0] = np.real(self.C @ x0)
-            
-            for k in range(p-1):
-                x[:,k+1] = self.A @ x[:,k] + self.B @ u[:,k]
-                y[:,k+1] = np.real(self.C @ x[:,k+1])
+        x = np.zeros((self.nx, p), dtype=complex)
+        y = np.zeros((self.ny, p))
+        x[:,0] = x0
+        y[:,0] = np.real(self.C @ x0)
+        
+        for k in range(p-1):
+            x[:,k+1] = self.A @ x[:,k] + self.B @ u[:,k]
+            y[:,k+1] = np.real(self.C @ x[:,k+1])
 
-            return x, y
+        return x, y
 
-        def error(self, Y, U):
-            Y0 = Y[:,:-1]
-            Y1 = Y[:,1:]
-            U0 = U[:,:-1]
-            Cp = np.linalg.pinv(self.C)
+    def error(self, Y, U):
+        Y0 = Y[:,:-1]
+        Y1 = Y[:,1:]
+        U0 = U[:,:-1]
+        Cp = np.linalg.pinv(self.C)
 
-            error = np.linalg.norm((Y1 - self.C @ (self.A @ (Cp @ Y0) + self.B @ U0)), ord='fro')/ \
-                      np.linalg.norm(Y1, ord='fro')*100
-            print('    Model error = ', error, '%')
+        error = np.linalg.norm((Y1 - self.C @ (self.A @ (Cp @ Y0) + self.B @ U0)), ord='fro')/ \
+                  np.linalg.norm(Y1, ord='fro')*100
+        print('    Model error = ', error, '%')
+
+
+
+
+
+class dmdcsp_batch(object):
+    """Batch version of Sparsity-Promoting Dynamic Mode Decomposition with Control Class"""
+
 
 
 
@@ -96,25 +103,19 @@ class dmdcsp(object):
         self.Phi = self.Uhat @ self.W
 
         # Setup matrices for sparsity-promoting optimization
-        self.R = np.zeros((2*self.nx, self.p+1), dtype=np.complex)
-
-        for k in range(self.p+1):
-            # Zero input response (first half)
-            self.R[:self.nx,k] = lamb**k
-
-            # Zero state response (second half)
-            for j in range(k-1):
-                self.R[self.nx:,k] += lamb**(k-j-1)*U[0,j]  # Vectorize that??
-
-        self.L = np.block([self.W,self.W])
+       #self.R = np.zeros((self.nx, self.p), dtype=np.complex)
+        R = self.Lambda @ (np.linalg.pinv(self.Phi) @ self.Y[:,:-1]) + self.Beta @ U[:,:-1]
+        L = self.Phi
+        Y1 = self.Y[:,1:]
 
         # Now cast into quadratic form
-        self.P = np.multiply(self.L.conj().T @ self.L, (self.R @ self.R.conj().T).conj())
-        self.q = np.diag(self.R @ X.conj().T @ self.L).conj()
-        self.s = np.trace(X.conj().T @ X)
+        self.P = np.multiply(L.conj().T @ L, (R @ R.conj().T).conj())
+        self.q = np.diag(R @ Y1.conj().T @ L).conj()
+        self.s = np.trace(Y1.conj().T @ Y1)
+        print('s.shape = ', self.s.shape)
 
-        self.sys_pod = self.stateSpace(self.A, self.B, self.Uhat)
-        self.sys_dmd = self.stateSpace(self.Lambda, self.Beta, self.Phi)
+        self.sys_pod = stateSpace(self.A, self.B, self.Uhat)
+        self.sys_dmd = stateSpace(self.Lambda, self.Beta, self.Phi)
 
         print('DMD model error:')
         self.sys_dmd.error(Y,U)
@@ -169,8 +170,9 @@ class dmdcsp(object):
 
         # Define and solve the sparsity-promoting optimization problem
         # Weighted L1 norm is updated iteratively
-        x = cp.Variable(2*self.nx, complex=True)
-        weights = np.ones(2*self.nx)
+        x = cp.Variable(self.nx)
+       #x = cp.Variable(self.nx, complex=True)
+        weights = np.ones(self.nx)
         for i in range(niter):
             objective_sparse = cp.Minimize(cp.quad_form(x, self.P) 
                                          - 2.*cp.real(self.q.conj().T @ x)
@@ -182,11 +184,13 @@ class dmdcsp(object):
            #sol_sparse = prob_sparse.solve()
         
             x_sp = x.value # Sparse solution
+            if x_sp is None:
+                x_sp = np.ones(self.nx)
 
             # Update weights
             weights = 1.0/(np.abs(x_sp) + np.finfo(float).eps)
 
-            nonzero = (np.abs(x_sp[:self.nx]) > zero_thres) + (np.abs(x_sp[self.nx:]) > zero_thres)     # Nonzero modes
+            nonzero = np.abs(x_sp) > zero_thres # Nonzero modes
             print("                               %d of %d" % (np.sum(nonzero), self.nx))
 
         J_sp = np.real(x_sp.conj().T @ self.P @ x_sp - 2*np.real(self.q.conj().T @ x_sp) + self.s)  # Square error
@@ -194,15 +198,15 @@ class dmdcsp(object):
         nr = np.sum(nonzero)    # Number of nonzero modes - order of the sparse/reduced model
 
         Ez = np.eye(self.nx)[:,~nonzero]
-        Ezaug = sp.linalg.block_diag(Ez, Ez)
 
         # Define and solve the refinement optimization problem
-        y = cp.Variable(2*self.nx, complex=True)
+        y = cp.Variable(self.nx)
+       #y = cp.Variable(self.nx, complex=True)
         objective_refine = cp.Minimize(cp.quad_form(y, self.P) 
                                      - 2.*cp.real(self.q.conj().T @ y)
                                      + self.s)
         if np.sum(~nonzero):
-            constraint_refine = [Ezaug.T @ y == 0]
+            constraint_refine = [Ez.T @ y == 0]
             prob_refine = cp.Problem(objective_refine, constraint_refine)
         else:
             prob_refine = cp.Problem(objective_refine)
@@ -216,21 +220,25 @@ class dmdcsp(object):
 
         E = np.eye(self.nx)[:,nonzero]
         Lambda_bar = E.T @ self.Lambda @ E
-        Beta_bar = E.T @ x_ref[self.nx:]
-        Beta_bar = np.expand_dims(Beta_bar, axis=1)
-        Phi_bar = self.Phi @ E
+        Beta_bar = E.T @ self.Beta
+#       Beta_bar = np.expand_dims(Beta_bar, axis=1)
+        Phi_bar = self.Phi @ np.diag(x_ref) @ E
 
         stats = {}
-        stats["nr"] = np.sum(nonzero)
-        stats["x_sp"] = x_sp
-        stats["x_ref"] = x_ref
-        stats["E"] = E
-        stats["J_sp"] = J_sp
-        stats["J_ref"] = J_ref
+        stats["nr"]     = nr
+        stats["x_sp"]   = x_sp
+        stats["x_ref"]  = x_ref
+        stats["z_0"]    = (np.linalg.pinv(self.Phi) @ self.Y[:,0])[nonzero]
+        stats["E"]      = E
+        stats["J_sp"]   = J_sp
+        stats["J_ref"]  = J_ref
         stats["P_loss"] = P_loss
 
+        if nr != 0:
+            print("Rank of controllability matrix: %d of %d" % (np.linalg.matrix_rank(control.ctrb(Lambda_bar, Beta_bar)), nr))
+
         #return Lambda_bar, Beta_bar, Phi_bar, stats
-        return self.stateSpace(Lambda_bar, Beta_bar, Phi_bar), stats
+        return stateSpace(Lambda_bar, Beta_bar, Phi_bar), stats
 
 
 
@@ -242,6 +250,7 @@ class dmdcsp(object):
         stats = {}
         stats["x_sp"]   = num*[None]
         stats["x_ref"]  = num*[None]
+        stats["z_0"]    = num*[None]
         stats["E"]      = num*[None]
         stats['nr']     = np.zeros(num)
         stats["J_sp"]   = np.zeros(num)
@@ -249,19 +258,37 @@ class dmdcsp(object):
         stats["P_loss"] = np.zeros(num)
 
         for i in range(num):
+            print('Model # %d' % i)
             self.rsys[i], stats_tmp = self.sparse(gamma[i], niter)
 
             # Save stats
             stats["x_sp"][i]   = stats_tmp["x_sp"]  
             stats["x_ref"][i]  = stats_tmp["x_ref"] 
+            stats["z_0"][i]    = stats_tmp["z_0"] 
             stats["E"][i]      = stats_tmp["E"]     
             stats['nr'][i]     = stats_tmp['nr']    
             stats["J_sp"][i]   = stats_tmp["J_sp"]  
             stats["J_ref"][i]  = stats_tmp["J_ref"] 
             stats["P_loss"][i] = stats_tmp["P_loss"]
 
+        self.sp_stats = stats
         return stats
-            
+
+
+
+    def compute_noise_cov(self, sys_i, sens):
+
+        # Measurement output matrix
+        C = self.rsys[sys_i].C[sens,:]
+
+        PhiInv = np.linalg.pinv(self.rsys[sys_i].C)
+
+        Qe = np.cov(PhiInv @ self.Y[:,1:] 
+                  - self.rsys[sys_i].A @ (PhiInv @ self.Y[:,:-1] 
+                  - self.rsys[sys_i].B @ self.U[:,:-1]))
+        Re = np.cov(self.Y[sens,1:] - C @ (PhiInv @ self.Y[:,1:]))
+
+        return C, Qe, Re
 
 
 
