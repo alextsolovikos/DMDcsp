@@ -36,7 +36,7 @@ Z = Y[sens,:]
 
 # LQR weights
 Qr = np.diag([0, 0, 0, 0, 1, 1, 0, 0])
-Rr = 1.0e+4
+Rr = 1.0e+4 * np.eye(nu)
 
 # Initialize lqg controller/estimator
 controller = lqg.lqg(sys.A, sys.B, C, Qr, Rr, Qe, Re)

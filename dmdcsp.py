@@ -17,6 +17,16 @@ import control
 
 class stateSpace(object):
 
+    """
+    Custom class for defining a simple discrete-time state-space model of the form:
+        x(k+1) = A x(k) + B u(k)
+          y(k) = C x(k)
+
+    - Initialization: 
+        Simply give matrices A, B, C
+
+    """
+
     def __init__(self, A, B, C):
         self.A = A
         self.B = B
@@ -25,7 +35,20 @@ class stateSpace(object):
         self.nu = B.shape[1]
         self.ny = C.shape[0]
 
+
     def lsim(self, x0, u):
+        """
+        lsim(x0, u):
+            Simulates the state and output for a given sequence of inputs u = [u(0), u(1), ...] and initial condition x(0) = x0.
+
+            Input: 
+                x0: initial condition
+                u: control input [u(0), u(1), ..., u(N)]
+
+            Output:
+                x: state [x(0), x(1), ..., x(N+1)]
+                y: output [y(0), y(1), ..., y(N+1)]
+        """
         p = u.shape[1]
 
         if u.shape[0] != self.nu:
@@ -44,10 +67,16 @@ class stateSpace(object):
 
         return x, y
 
-    def error(self, Y, U):
-        Y0 = Y[:,:-1]
-        Y1 = Y[:,1:]
-        U0 = U[:,:-1]
+
+    def error(self, Y0, Y1, U0):
+        """
+        error(Y, U):
+            One-step forward reconstruction error for the output:
+
+                          ||Y_actual - Y_simulated||_F
+                error  =  ----------------------------
+                                 ||Y_actual||_F
+        """
         Cp = np.linalg.pinv(self.C)
 
         error = np.linalg.norm((Y1 - self.C @ (self.A @ (Cp @ Y0) + self.B @ U0)), ord='fro')/ \
@@ -56,43 +85,48 @@ class stateSpace(object):
 
 
 
-
-
 class dmdcsp(object):
-    """Batch version of Sparsity-Promoting Dynamic Mode Decomposition with Control Class"""
+    """
+    Sparsity-Promoting Dynamic Mode Decomposition with Control Class
 
+    Initialization: Simply provide data matrices Y0, Y1, U0
 
+    """
 
+    def __init__(self, Y0, Y1, U0, nx=10, u_nominal=1, dt=1):
 
-    def __init__(self, Y, U, nx=10, u_nominal=1, dt=1):
+        if Y0.shape[1] != U0.shape[1]:
+            raise ValueError("The number of snapshot pairs Y0, U0 should be equal to the number of training inputs.")
 
-        if Y.shape[1] != U.shape[1]:
-            raise ValueError("The number of snapshot pairs should be equal to the number of training inputs.")
+        if Y1.shape[1] != U0.shape[1]:
+            raise ValueError("The number of snapshot pairs Y1, U0 should be equal to the number of training inputs.")
 
         # Parameters
-        self.ny = Y.shape[0]    # Number of outputs
-        self.nu = U.shape[0]    # Number of inputs
+        self.ny = Y0.shape[0]   # Number of outputs
+        self.nu = U0.shape[0]   # Number of inputs
         self.nx = nx            # Number of POD modes kept
-        self.p = Y.shape[1]-1   # Number of training snapshots available
+        self.p = Y0.shape[1]    # Number of training snapshots available
         self.dt = dt            # Time step
 
         # Save snapshots
-        self.Y = Y
-        self.U = U
+        self.Y0 = Y0
+        self.Y1 = Y1
+        self.U0 = U0
 
         # Compute POD Modes
-        self.Uhat = self.compute_POD_basis(Y, nx)
+        self.Uhat = self.compute_POD_basis(Y0, nx)
 
         # Project snapshots
-        X = self.Uhat.conj().T @ Y
+        X0 = self.Uhat.conj().T @ Y0
+        X1 = self.Uhat.conj().T @ Y1
 
         # POD projection error
-        pod_error = np.linalg.norm((Y - self.Uhat @ X), ord='fro')/ \
-                    np.linalg.norm(Y, ord='fro')*100
+        pod_error = np.linalg.norm((Y0 - self.Uhat @ X0), ord='fro')/ \
+                    np.linalg.norm(Y0, ord='fro')*100
         print('    POD projection error = ', pod_error, '%')
 
         # Run DMDc
-        self.A, self.B = self.DMDc(X[:,:-1], X[:,1:], U[:,:-1])
+        self.A, self.B = self.DMDc(X0, X1, U0)
         
         # Eigendecomposition of A
         lamb, self.W = np.linalg.eig(self.A)
@@ -104,9 +138,9 @@ class dmdcsp(object):
 
         # Setup matrices for sparsity-promoting optimization
        #self.R = np.zeros((self.nx, self.p), dtype=np.complex)
-        R = self.Lambda @ (np.linalg.pinv(self.Phi) @ self.Y[:,:-1]) + self.Beta @ U[:,:-1]
+        R = self.Lambda @ (np.linalg.pinv(self.Phi) @ self.Y0) + self.Beta @ U0
         L = self.Phi
-        Y1 = self.Y[:,1:]
+        #Y1 = self.Y[:,1:]
 
         # Now cast into quadratic form
         self.P = np.multiply(L.conj().T @ L, (R @ R.conj().T).conj())
@@ -118,7 +152,7 @@ class dmdcsp(object):
         self.sys_dmd = stateSpace(self.Lambda, self.Beta, self.Phi)
 
         print('DMD model error:')
-        self.sys_dmd.error(Y,U)
+        self.sys_dmd.error(Y0, Y1, U0)
 
 
 
@@ -130,13 +164,13 @@ class dmdcsp(object):
             U0 : corresponding input
 
         Outputs:
-            rsys : state space representation of the reduced-order linear system
+            A, B : state and output matrices fitted to the reduced-order data
 
         """
 
         nx = X0.shape[0]
         nu = U0.shape[0]
-        p = U0.shape[1]
+        p  = U0.shape[1]
 
         U, Sig, VT = np.linalg.svd(np.vstack((X0, U0)), full_matrices=False)
         thres = 1.0e-10
@@ -171,7 +205,6 @@ class dmdcsp(object):
         # Define and solve the sparsity-promoting optimization problem
         # Weighted L1 norm is updated iteratively
         x = cp.Variable(self.nx)
-       #x = cp.Variable(self.nx, complex=True)
         weights = np.ones(self.nx)
         for i in range(niter):
             objective_sparse = cp.Minimize(cp.quad_form(x, self.P) 
@@ -180,8 +213,6 @@ class dmdcsp(object):
                                          + gamma * cp.pnorm(np.diag(weights)*x, p=1))
             prob_sparse = cp.Problem(objective_sparse)
             sol_sparse = prob_sparse.solve(verbose=False, solver=cp.SCS)
-           #sol_sparse = prob_sparse.solve(verbose=True, solver=cp.SCS)
-           #sol_sparse = prob_sparse.solve()
         
             x_sp = x.value # Sparse solution
             if x_sp is None:
@@ -194,14 +225,12 @@ class dmdcsp(object):
             print("                               %d of %d" % (np.sum(nonzero), self.nx))
 
         J_sp = np.real(x_sp.conj().T @ self.P @ x_sp - 2*np.real(self.q.conj().T @ x_sp) + self.s)  # Square error
-#       nonzero = (np.abs(x_sp[:self.nx]) > zero_thres) + (np.abs(x_sp[self.nx:]) > zero_thres)     # Nonzero modes
         nr = np.sum(nonzero)    # Number of nonzero modes - order of the sparse/reduced model
 
         Ez = np.eye(self.nx)[:,~nonzero]
 
         # Define and solve the refinement optimization problem
         y = cp.Variable(self.nx)
-       #y = cp.Variable(self.nx, complex=True)
         objective_refine = cp.Minimize(cp.quad_form(y, self.P) 
                                      - 2.*cp.real(self.q.conj().T @ y)
                                      + self.s)
@@ -221,14 +250,13 @@ class dmdcsp(object):
         E = np.eye(self.nx)[:,nonzero]
         Lambda_bar = E.T @ self.Lambda @ E
         Beta_bar = E.T @ self.Beta
-#       Beta_bar = np.expand_dims(Beta_bar, axis=1)
         Phi_bar = self.Phi @ np.diag(x_ref) @ E
 
         stats = {}
         stats["nr"]     = nr
         stats["x_sp"]   = x_sp
         stats["x_ref"]  = x_ref
-        stats["z_0"]    = (np.linalg.pinv(self.Phi) @ self.Y[:,0])[nonzero]
+        stats["z_0"]    = (np.linalg.pinv(self.Phi) @ self.Y0[:,0])[nonzero]
         stats["E"]      = E
         stats["J_sp"]   = J_sp
         stats["J_ref"]  = J_ref
@@ -237,7 +265,6 @@ class dmdcsp(object):
         if nr != 0:
             print("Rank of controllability matrix: %d of %d" % (np.linalg.matrix_rank(control.ctrb(Lambda_bar, Beta_bar)), nr))
 
-        #return Lambda_bar, Beta_bar, Phi_bar, stats
         return stateSpace(Lambda_bar, Beta_bar, Phi_bar), stats
 
 
@@ -283,10 +310,10 @@ class dmdcsp(object):
 
         PhiInv = np.linalg.pinv(self.rsys[sys_i].C)
 
-        Qe = np.cov(PhiInv @ self.Y[:,1:] 
-                  - self.rsys[sys_i].A @ (PhiInv @ self.Y[:,:-1] 
-                  - self.rsys[sys_i].B @ self.U[:,:-1]))
-        Re = np.cov(self.Y[sens,1:] - C @ (PhiInv @ self.Y[:,1:]))
+        Qe = np.cov(PhiInv @ self.Y1 
+                  - self.rsys[sys_i].A @ (PhiInv @ self.Y0 
+                  - self.rsys[sys_i].B @ self.U0))
+        Re = np.cov(self.Y1[sens] - C @ (PhiInv @ self.Y1))
 
         return C, Qe, Re
 
@@ -360,22 +387,8 @@ class dmdcsp(object):
 
     def plot_model_response(self, sys, grid):
 
-#       # Run linear system simulation
-#       A = sys.A
-#       B = sys.B
-#       C = sys.C
-#       xdmd = np.zeros((self.nx, self.p), dtype=complex)
-#       ydmd = np.zeros((self.ny, self.p))
-#       xdmd[:,0] = np.linalg.pinv(C) @ self.Y[:,0]
-#       ydmd[:,0] = self.Y[:,0]
-#       
-#       for k in range(self.p-1):
-#           xdmd[:,k+1] = A @ xdmd[:,k] + B @ self.U[:,k].T
-#           ydmd[:,k+1] = C @ xdmd[:,k+1]
-
-
-        x0 = np.linalg.pinv(sys.C) @ self.Y[:,0]
-        xdmd, ydmd = sys.lsim(x0, self.U)
+        x0 = np.linalg.pinv(sys.C) @ self.Y0[:,0]
+        xdmd, ydmd = sys.lsim(x0, self.U0)
 
         nlevels = 41
         wymin = -10
@@ -386,7 +399,7 @@ class dmdcsp(object):
         xmax = np.max(X)
         
         def WY(k):
-            return self.Y[:,k].reshape((grid.npx, grid.npz))
+            return self.Y0[:,k].reshape((grid.npx, grid.npz))
 
         def WY_dmd(k):
             return ydmd[:,k].reshape((grid.npx, grid.npz))

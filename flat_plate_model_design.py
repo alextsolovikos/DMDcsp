@@ -14,14 +14,9 @@ import dmdcsp
 
 
 # Import training data
-#training_case = "training_1"
-#training_case = "training_2"
-#training_case = "training_3"
 training_case = "training_4"
-#training_case = "zero_input"
 grid_full = data_loader.grid(training_case, skip_points=1)
 train_data = data_loader.flow_data(grid_full, training_case, timestep_skip=1, start=0, end=1500)
-#train_data_2 = data_loader.flow_data(grid_full, training_case, timestep_skip=1, start=1500, end=2000)
 
 #train_data.plot_grid()
 #plt.show()
@@ -31,23 +26,17 @@ sens = [236, 967]
 
 #anim = train_data.plot(sens=sens)
 #plt.show()
-#exit()
 
 #Y = np.hstack((train_data.wy, train_data_2.wy))
 #U = np.hstack((train_data.u, train_data_2.u))
-Y = train_data.wy
-U = train_data.u
+Y0 = train_data.wy[:,:-1]
+Y1 = train_data.wy[:,1:]
+U0 = train_data.u[:,:-1]
 
 nx = 30 # Number of POD modes to keep
 
 # Full dmdc model
-#model = dmdcsp.dmdcsp(Y, U, nx=nx, u_nominal=1, dt=1)
-model = dmdcsp.dmdcsp(Y, U, nx=nx, u_nominal=1, dt=1)
-
-#anim = model.plot_dmd_modes(grid_full)
-#anim = model.plot_model_response(model.sys_dmd, grid_full)
-#plt.show()
-#exit()
+model = dmdcsp.dmdcsp(Y0, Y1, U0, nx=nx)
 
 
 """
@@ -70,6 +59,7 @@ Ploss_uq = Ploss[indices]
 sys_i = int(input('Choose the sparse model id to use: '))
 
 nr = stats['nr'][sys_i]
+
 # Print covariances
 C, Qe, Re = model.compute_noise_cov(sys_i, sens)
 

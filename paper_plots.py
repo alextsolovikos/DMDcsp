@@ -5,6 +5,7 @@ from matplotlib.patches import Circle
 from matplotlib import patches
 plt.rc('text', usetex=True)
 plt.rc('font', size=16)
+from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 import pickle
 
 # Custom libraries
@@ -12,10 +13,10 @@ import data_loader
 import dmdcsp
 
 # Load full model
-model = pickle.load(open('dmdc_model.p', 'rb'))
+model = pickle.load(open('model_full.p', 'rb'))
 
 # Load sparse
-[sys, C, Qe, Re, sens] = pickle.load(open('model.p', 'rb'))
+[sys, C, Qe, Re, sens] = pickle.load(open('model_sparse.p', 'rb'))
 
 # Load controller
 controller = pickle.load(open('dns_controller_data/controller.p', 'rb'))
@@ -83,7 +84,7 @@ fig, axs = plt.subplots(1, figsize=(6,4), facecolor='w', edgecolor='k')
 plt.subplots_adjust(hspace=0.6, left=0.18, right=0.95, top=0.95, bottom=0.18)
 
 ##axs.plot(order_uq, Ploss_uq, c='k', fillstyle='none', marker='o', zorder=11, clip_on=False)
-axs.plot(order_uq[1:], Ploss_uq[1:], c='k', zorder=9, clip_on=False)
+axs.plot(order_uq, Ploss_uq, c='k', zorder=9, clip_on=False)
 #axs.plot(order, Ploss, c='k', linestyle='solid', marker='o', facecolors='none', edgecolors='k')
 #axs.scatter(order, Ploss, facecolors='none', edgecolors='k', marker='o')
 ##axs.plot(order[sys_i], Ploss[sys_i], c='darkred', fillstyle='none', marker='x')
@@ -95,10 +96,10 @@ axs.set_xlabel('$n_x$')
 axs.set_ylabel('$P_{\\mathrm{error}},\ \%$')
 #axs.set_ylabel('$P$, \%')
 axs.set_xticks(np.arange(0, 31, 5))
-axs.set_yticks(np.arange(0, 51, 10))
+axs.set_yticks(np.arange(0, 101, 20))
 plt.grid(True)
 axs.set_xlim([0,30])
-axs.set_ylim([0,50])
+axs.set_ylim([0,100])
 plt.savefig('/Users/atsol/research/papers/dmdcsp-paper/figures/Ploss.eps')
 
 #plt.show()
@@ -288,28 +289,28 @@ Wy_0 = wy_data_0[:,3].reshape(385,769)
 xmax = np.max(X_dns)
 
 fig, axs = plt.subplots(1, figsize=(6,4), facecolor='w', edgecolor='k')
-plt.subplots_adjust(right=0.96)
+plt.subplots_adjust(right=0.96, top=0.98, bottom=0.0, left=0.08)
 cont = axs.contourf(X_dns, Z_dns, Wy_0, nlevels, cmap='coolwarm', vmin=wymin, vmax=wymax)
 m = plt.cm.ScalarMappable(cmap='coolwarm')
 m.set_array(Wy_0)
 m.set_clim(-10, 10)
-plt.colorbar(m, boundaries=np.linspace(-12, 12, 7))
+plt.colorbar(m, boundaries=np.linspace(-12, 12, 7), shrink=0.6, orientation='horizontal', pad=0.25)
 #plt.clim(wymin, wymax)
 #cbar = fig.colorbar(cont, ax=axs, orientation='vertical')
 #cbar.ax.set_autoscale_on(True)
 #cbar.set_ticks(np.linspace(wymin, wymax, num=6, endpoint=True))
 
 # Plot grid
-axs.scatter(grid_full.x, grid_full.z, color='k', s=0.1)
+axs.scatter(grid_full.x, grid_full.z, color='k', s=0.05)
 
 # Plot sensors
 axs.scatter(grid_full.x[sens], grid_full.z[sens], color='k', s=30, marker='^')
 
 # Plot actuator
 axs.scatter(1.95, 0.96, color='k', s=40, marker='o')
-L = 0.1
-Hw = 0.02
-Hl = 0.02
+L = 0.15
+Hw = 0.01
+Hl = 0.01
 x_act = 1.95
 y_act = 0.96
 dx_act = L*np.cos(70.*np.pi/180.)
@@ -339,11 +340,14 @@ axs.add_patch(flat_plate)
 grid_rectangle = patches.Rectangle((grid_full.xmin, grid_full.zmin),
                                     grid_full.xmax - grid_full.xmin,
                                     grid_full.zmax - grid_full.zmin,
-                                    linewidth = 1, edgecolor='k', facecolor='none')
+                                    linewidth = 0.75, edgecolor='k', facecolor='none')
 axs.add_patch(grid_rectangle)
 
-axs.set_xlim([1.1,3])
+axs.set_xlim([1.1,3.4])
 axs.set_ylim([0.4,1.6])
+axs.set_xlabel("Streamwise")
+axs.set_ylabel("Normal")
+axs.set_xticks(np.arange(1.5, 3.5, 0.5))
 axs.set_aspect('equal', 'box')
 #cbar.ax.locator_params(nbins=6)
 
@@ -356,12 +360,17 @@ plt.savefig('/Users/atsol/research/papers/dmdcsp-paper/figures/dns_with_grid.eps
 Wy_1 = wy_data_1[:,3].reshape(385,769)
 
 fig, axs = plt.subplots(1, figsize=(6,4), facecolor='w', edgecolor='k')
-plt.subplots_adjust(right=0.96)
+plt.subplots_adjust(right=0.96, top=0.98, bottom=0.0, left=0.08)
 cont = axs.contourf(X_dns, Z_dns, Wy_1, nlevels, cmap='coolwarm', vmin=wymin, vmax=wymax)
 m = plt.cm.ScalarMappable(cmap='coolwarm')
 m.set_array(Wy_0)
 m.set_clim(-10, 10)
-plt.colorbar(m, boundaries=np.linspace(-12, 12, 7))
+
+
+
+
+#plt.colorbar(m, boundaries=np.linspace(-12, 12, 7), orientation='horizontal', shrink=0.6)
+plt.colorbar(m, boundaries=np.linspace(-12, 12, 7), shrink=0.6, orientation='horizontal', pad=0.25)
 #plt.colorbar(m, boundaries=np.linspace(-10, 10, 6))
 #plt.clim(wymin, wymax)
 #cbar = fig.colorbar(cont, ax=axs, orientation='vertical')
@@ -411,8 +420,11 @@ axs.add_patch(flat_plate)
 #                                    linewidth = 1, edgecolor='k', facecolor='none')
 #axs.add_patch(grid_rectangle)
 
-axs.set_xlim([1.1,3])
+axs.set_xlim([1.1,3.4])
 axs.set_ylim([0.4,1.6])
+axs.set_xlabel("Streamwise")
+axs.set_ylabel("Normal")
+axs.set_xticks(np.arange(1.5, 3.5, 0.5))
 axs.set_aspect('equal', 'box')
 #cbar.ax.locator_params(nbins=6)
 
@@ -425,12 +437,12 @@ plt.savefig('/Users/atsol/research/papers/dmdcsp-paper/figures/dns_2.eps')
 Wy_2 = wy_data_2[:,3].reshape(385,769)
 
 fig, axs = plt.subplots(1, figsize=(6,4), facecolor='w', edgecolor='k')
-plt.subplots_adjust(right=0.96)
+plt.subplots_adjust(right=0.96, top=0.98, bottom=0.0, left=0.08)
 cont = axs.contourf(X_dns, Z_dns, Wy_2, nlevels, cmap='coolwarm', vmin=wymin, vmax=wymax)
 m = plt.cm.ScalarMappable(cmap='coolwarm')
 m.set_array(Wy_0)
 m.set_clim(-10, 10)
-plt.colorbar(m, boundaries=np.linspace(-12, 12, 7))
+plt.colorbar(m, boundaries=np.linspace(-12, 12, 7), shrink=0.6, orientation='horizontal', pad=0.25)
 #plt.colorbar(m, boundaries=np.linspace(-10, 10, 6))
 #plt.clim(wymin, wymax)
 #cbar = fig.colorbar(cont, ax=axs, orientation='vertical')
@@ -480,8 +492,11 @@ axs.add_patch(flat_plate)
 #                                    linewidth = 1, edgecolor='k', facecolor='none')
 #axs.add_patch(grid_rectangle)
 
-axs.set_xlim([1.1,3])
+axs.set_xlim([1.1,3.4])
 axs.set_ylim([0.4,1.6])
+axs.set_xlabel("Streamwise")
+axs.set_ylabel("Normal")
+axs.set_xticks(np.arange(1.5, 3.5, 0.5))
 axs.set_aspect('equal', 'box')
 #cbar.ax.locator_params(nbins=6)
 
