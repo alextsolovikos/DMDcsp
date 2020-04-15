@@ -113,13 +113,11 @@ axs.plot(U[0,:nsteps], c = 'r', linestyle='dashed', label='dns input')
 axs.plot(Z[0]/10., c = 'b', linestyle='dotted', label='z_0/10')
 axs.plot(est_error, c = 'b', label='x_error')
 axs.plot(y_error, c = 'b', linestyle='dashed', label='x_error')
-#axs.plot(P_det, c = 'k', linestyle='dashed', label='x_error')
 
 axs.set_axisbelow(True)
 axs.set_xlabel('Time step $k$')
 axs.set_ylabel('Input')
 plt.grid(True)
-#plt.savefig('/Users/atsol/research/papers/AIAA-MPC-of-LSMS/figures/case_3_inputs.eps')
 
 plt.show()
 

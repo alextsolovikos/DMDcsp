@@ -60,12 +60,8 @@ for k in range(nsteps-1):
 
 y_hat = sys.C @ x_hat
 
-#x_error = np.linalg.norm(x_hat - x_best, ord=2, axis=0)
-#y_error = np.linalg.norm(y_hat - Y, ord=2, axis=0)
-
 x_error = np.linalg.norm(x_hat - x_best, ord=2, axis=0) / np.linalg.norm(x_best, ord=2, axis=0)
 y_error = np.linalg.norm(y_hat - Y, ord=2, axis=0) / np.linalg.norm(Y, ord=2, axis=0)
-
 
 
 # Load Tecplot data
@@ -83,26 +79,19 @@ spm_size = 50
 fig, axs = plt.subplots(1, figsize=(6,4), facecolor='w', edgecolor='k')
 plt.subplots_adjust(hspace=0.6, left=0.18, right=0.95, top=0.95, bottom=0.18)
 
-##axs.plot(order_uq, Ploss_uq, c='k', fillstyle='none', marker='o', zorder=11, clip_on=False)
 axs.plot(order_uq, Ploss_uq, c='k', zorder=9, clip_on=False)
-#axs.plot(order, Ploss, c='k', linestyle='solid', marker='o', facecolors='none', edgecolors='k')
-#axs.scatter(order, Ploss, facecolors='none', edgecolors='k', marker='o')
-##axs.plot(order[sys_i], Ploss[sys_i], c='darkred', fillstyle='none', marker='x')
 axs.scatter(order_uq, Ploss_uq, s=m_size, marker='o', facecolor='none', edgecolor='k', zorder=10, clip_on=False)
 axs.scatter(order[sys_i], Ploss[sys_i], s=spm_size, marker='x', color='darkred', zorder=11, clip_on=False)
 
 axs.set_axisbelow(True)
 axs.set_xlabel('$n_x$')
 axs.set_ylabel('$P_{\\mathrm{error}},\ \%$')
-#axs.set_ylabel('$P$, \%')
 axs.set_xticks(np.arange(0, 31, 5))
 axs.set_yticks(np.arange(0, 101, 20))
 plt.grid(True)
 axs.set_xlim([0,30])
 axs.set_ylim([0,100])
 plt.savefig('/Users/atsol/research/papers/dmdcsp-paper/figures/Ploss.eps')
-
-#plt.show()
 
 
 ##########################
@@ -116,7 +105,6 @@ fig, axs = plt.subplots(1, figsize=(6,4), facecolor='w', edgecolor='k')
 plt.subplots_adjust(hspace=0.6, left=0.22, right=0.95, top=0.95, bottom=0.18)
 
 # Unit circle
-#circle = Circle((0,0), 1.0, edgecolor='k', facecolor='none', linewidth=2, linestyle=(0, (5, 10)))
 circle = Circle((0,0), 1.0, edgecolor='k', facecolor='none', linewidth=1)
 axs.add_artist(circle)
 
@@ -136,8 +124,6 @@ axs.set_ylim([-0.25, 0.25])
 plt.grid(True)
 plt.savefig('/Users/atsol/research/papers/dmdcsp-paper/figures/eigenvalues.eps')
 
-#plt.show()
-
 
 ##########################
 # Plot frequencies
@@ -146,12 +132,10 @@ plt.savefig('/Users/atsol/research/papers/dmdcsp-paper/figures/eigenvalues.eps')
 Ts = 5.0 * 0.00125
 
 # Full system
-#freq = np.abs(np.angle(np.diag(model.rsys[0].A)))/(2.0*np.pi)/Ts
 freq = np.abs(np.imag(np.log(np.diag(model.rsys[0].A)))/(2.0*np.pi)/Ts)
 ampl = np.abs(z0[0])
 
 # Sparse system
-#freq_sp = np.abs(np.angle(np.diag(model.rsys[sys_i].A)))/(2.0*np.pi)/Ts
 freq_sp = np.abs(np.imag(np.log(np.diag(model.rsys[sys_i].A)))/(2.0*np.pi)/Ts)
 ampl_sp = np.abs(z0[sys_i][:nx])
 print(freq_sp)
@@ -181,8 +165,6 @@ plt.subplots_adjust(hspace=0.6, left=0.2, right=0.95, top=0.95, bottom=0.3)
 
 t = np.arange(0,nsteps,1)*Ts
 axs.plot(t, U[0,:], c = 'k')
-#axs.plot(u_star[0,:], c = 'k')
-#axs.plot(U[0,:nsteps], c = 'r', linestyle='dashed')
 
 axs.set_axisbelow(True)
 axs.set_xlabel('$kT_s$')
@@ -203,10 +185,7 @@ fig, axs = plt.subplots(1, figsize=(6,3), facecolor='w', edgecolor='k')
 plt.subplots_adjust(hspace=0.6, left=0.2, right=0.95, top=0.95, bottom=0.3)
 
 t = np.arange(0,nsteps,1)*Ts
-#axs.plot(t, Z[0,:], c = 'k')
 axs.plot(t, Z[1,:], c = 'k')
-#axs.plot(u_star[0,:], c = 'k')
-#axs.plot(U[0,:nsteps], c = 'r', linestyle='dashed')
 
 axs.set_axisbelow(True)
 axs.set_xlabel('$kT_s$')
@@ -254,10 +233,7 @@ fig, axs = plt.subplots(1, figsize=(6,3), facecolor='w', edgecolor='k')
 plt.subplots_adjust(hspace=0.6, left=0.2, right=0.95, top=0.95, bottom=0.3)
 
 t = np.arange(0,nsteps,1)*Ts
-#axs.plot(t, 100*x_error, c = 'darkred')
 axs.plot(t, 100*y_error, c = 'k')
-#axs.plot(u_star[0,:], c = 'k')
-#axs.plot(U[0,:nsteps], c = 'r', linestyle='dashed')
 
 axs.set_axisbelow(True)
 axs.set_xlabel('$kT_s$')
@@ -295,10 +271,6 @@ m = plt.cm.ScalarMappable(cmap='coolwarm')
 m.set_array(Wy_0)
 m.set_clim(-10, 10)
 plt.colorbar(m, boundaries=np.linspace(-12, 12, 7), shrink=0.6, orientation='horizontal', pad=0.25)
-#plt.clim(wymin, wymax)
-#cbar = fig.colorbar(cont, ax=axs, orientation='vertical')
-#cbar.ax.set_autoscale_on(True)
-#cbar.set_ticks(np.linspace(wymin, wymax, num=6, endpoint=True))
 
 # Plot grid
 axs.scatter(grid_full.x, grid_full.z, color='k', s=0.05)
@@ -317,8 +289,6 @@ dx_act = L*np.cos(70.*np.pi/180.)
 dy_act = L*np.sin(70.*np.pi/180.)
 axs.annotate("", xytext=(x_act, y_act), xy=(x_act + dx_act, y_act + dy_act), arrowprops=dict(arrowstyle="->"))
 axs.annotate("", xytext=(x_act, y_act), xy=(x_act - dx_act, y_act - dy_act), arrowprops=dict(arrowstyle="->"))
-#axs.arrow(1.95, 0.96, L*np.cos(70.*np.pi/180.), L*np.sin(70.*np.pi/180.), head_width=Hw, head_length=Hl, fc='none', ec='k')
-#axs.arrow(1.95, 0.96, -L*np.cos(70.*np.pi/180.), -L*np.sin(70.*np.pi/180.), head_width=Hw, head_length=Hl, fc='k', ec='k')
 
 # Flat plate patch
 delx = 5.0/768.0
@@ -349,7 +319,6 @@ axs.set_xlabel("Streamwise")
 axs.set_ylabel("Normal")
 axs.set_xticks(np.arange(1.5, 3.5, 0.5))
 axs.set_aspect('equal', 'box')
-#cbar.ax.locator_params(nbins=6)
 
 plt.savefig('/Users/atsol/research/papers/dmdcsp-paper/figures/dns_with_grid.eps')
 
@@ -366,36 +335,13 @@ m = plt.cm.ScalarMappable(cmap='coolwarm')
 m.set_array(Wy_0)
 m.set_clim(-10, 10)
 
-
-
-
-#plt.colorbar(m, boundaries=np.linspace(-12, 12, 7), orientation='horizontal', shrink=0.6)
 plt.colorbar(m, boundaries=np.linspace(-12, 12, 7), shrink=0.6, orientation='horizontal', pad=0.25)
-#plt.colorbar(m, boundaries=np.linspace(-10, 10, 6))
-#plt.clim(wymin, wymax)
-#cbar = fig.colorbar(cont, ax=axs, orientation='vertical')
-#cbar.ax.set_autoscale_on(True)
-#cbar.set_ticks(np.linspace(wymin, wymax, num=6, endpoint=True))
-
-# Plot grid
-#axs.scatter(grid_full.x, grid_full.z, color='k', s=0.1)
 
 # Plot sensors
 axs.scatter(grid_full.x[sens], grid_full.z[sens], color='k', s=30, marker='^')
 
 # Plot actuator
 axs.scatter(1.95, 0.96, color='k', s=40, marker='o')
-L = 0.1
-Hw = 0.02
-Hl = 0.02
-x_act = 1.95
-y_act = 0.96
-dx_act = L*np.cos(70.*np.pi/180.)
-dy_act = L*np.sin(70.*np.pi/180.)
-#axs.annotate("", xytext=(x_act, y_act), xy=(x_act + dx_act, y_act + dy_act), arrowprops=dict(arrowstyle="->"))
-#axs.annotate("", xytext=(x_act, y_act), xy=(x_act - dx_act, y_act - dy_act), arrowprops=dict(arrowstyle="->"))
-#axs.arrow(1.95, 0.96, L*np.cos(70.*np.pi/180.), L*np.sin(70.*np.pi/180.), head_width=Hw, head_length=Hl, fc='none', ec='k')
-#axs.arrow(1.95, 0.96, -L*np.cos(70.*np.pi/180.), -L*np.sin(70.*np.pi/180.), head_width=Hw, head_length=Hl, fc='k', ec='k')
 
 # Flat plate patch
 delx = 5.0/768.0
@@ -413,20 +359,12 @@ flat_plate = patches.Rectangle((xc - DL*np.cos(alpha)/2. - DT*np.sin(alpha)/2.,
                                 linewidth=1, edgecolor='black', facecolor='black')
 axs.add_patch(flat_plate)
 
-## Grid rectangle
-#grid_rectangle = patches.Rectangle((grid_full.xmin, grid_full.zmin),
-#                                    grid_full.xmax - grid_full.xmin,
-#                                    grid_full.zmax - grid_full.zmin,
-#                                    linewidth = 1, edgecolor='k', facecolor='none')
-#axs.add_patch(grid_rectangle)
-
 axs.set_xlim([1.1,3.4])
 axs.set_ylim([0.4,1.6])
 axs.set_xlabel("Streamwise")
 axs.set_ylabel("Normal")
 axs.set_xticks(np.arange(1.5, 3.5, 0.5))
 axs.set_aspect('equal', 'box')
-#cbar.ax.locator_params(nbins=6)
 
 plt.savefig('/Users/atsol/research/papers/dmdcsp-paper/figures/dns_2.eps')
 
@@ -449,25 +387,11 @@ plt.colorbar(m, boundaries=np.linspace(-12, 12, 7), shrink=0.6, orientation='hor
 #cbar.ax.set_autoscale_on(True)
 #cbar.set_ticks(np.linspace(wymin, wymax, num=6, endpoint=True))
 
-# Plot grid
-#axs.scatter(grid_full.x, grid_full.z, color='k', s=0.1)
-
 # Plot sensors
 axs.scatter(grid_full.x[sens], grid_full.z[sens], color='k', s=30, marker='^')
 
 # Plot actuator
 axs.scatter(1.95, 0.96, color='k', s=40, marker='o')
-L = 0.1
-Hw = 0.02
-Hl = 0.02
-x_act = 1.95
-y_act = 0.96
-dx_act = L*np.cos(70.*np.pi/180.)
-dy_act = L*np.sin(70.*np.pi/180.)
-#axs.annotate("", xytext=(x_act, y_act), xy=(x_act + dx_act, y_act + dy_act), arrowprops=dict(arrowstyle="->"))
-#axs.annotate("", xytext=(x_act, y_act), xy=(x_act - dx_act, y_act - dy_act), arrowprops=dict(arrowstyle="->"))
-#axs.arrow(1.95, 0.96, L*np.cos(70.*np.pi/180.), L*np.sin(70.*np.pi/180.), head_width=Hw, head_length=Hl, fc='none', ec='k')
-#axs.arrow(1.95, 0.96, -L*np.cos(70.*np.pi/180.), -L*np.sin(70.*np.pi/180.), head_width=Hw, head_length=Hl, fc='k', ec='k')
 
 # Flat plate patch
 delx = 5.0/768.0
@@ -485,20 +409,12 @@ flat_plate = patches.Rectangle((xc - DL*np.cos(alpha)/2. - DT*np.sin(alpha)/2.,
                                 linewidth=1, edgecolor='black', facecolor='black')
 axs.add_patch(flat_plate)
 
-## Grid rectangle
-#grid_rectangle = patches.Rectangle((grid_full.xmin, grid_full.zmin),
-#                                    grid_full.xmax - grid_full.xmin,
-#                                    grid_full.zmax - grid_full.zmin,
-#                                    linewidth = 1, edgecolor='k', facecolor='none')
-#axs.add_patch(grid_rectangle)
-
 axs.set_xlim([1.1,3.4])
 axs.set_ylim([0.4,1.6])
 axs.set_xlabel("Streamwise")
 axs.set_ylabel("Normal")
 axs.set_xticks(np.arange(1.5, 3.5, 0.5))
 axs.set_aspect('equal', 'box')
-#cbar.ax.locator_params(nbins=6)
 
 plt.savefig('/Users/atsol/research/papers/dmdcsp-paper/figures/dns_3.eps')
 

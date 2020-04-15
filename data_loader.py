@@ -20,7 +20,8 @@ class grid(object):
 
         # Indices of grid points to be used
         self.skip_points = skip_points
-        x_idx = np.arange(0,npx_full-18,skip_points)
+        skip_last_x = 18 # Ignore last columns from the right
+        x_idx = np.arange(0,npx_full-skip_last_x,skip_points)
         z_idx = np.arange(0,npz_full,skip_points)
         self.idx = np.ravel_multi_index((x_idx[:,np.newaxis], z_idx), (npx_full, npz_full)).flatten()
 
