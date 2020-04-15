@@ -58,7 +58,7 @@ class stateSpace(object):
 
 
 
-class dmdcsp_batch(object):
+class dmdcsp(object):
     """Batch version of Sparsity-Promoting Dynamic Mode Decomposition with Control Class"""
 
 
