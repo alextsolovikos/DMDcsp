@@ -94,10 +94,10 @@ print(np.abs(np.angle(np.diag(model.rsys[sys_i].A)))/(2.0*np.pi*Ts))
 """
     Save full model & final model
 """
-pickle.dump(model, open('dmdc_model.p', 'wb'))
+pickle.dump(model, open('model_full.p', 'wb'))
 
 final_model = [model.rsys[sys_i], C, Qe, Re, sens]
-pickle.dump(final_model, open('model.p', 'wb'))
+pickle.dump(final_model, open('model_sparse.p', 'wb'))
 
 
 """

@@ -15,7 +15,7 @@ import data_loader
 
 
 # Load sparse model
-[sys, C, Qe, Re, sens] = pickle.load(open('model.p', 'rb'))
+[sys, C, Qe, Re, sens] = pickle.load(open('model_sparse.p', 'rb'))
 nx = sys.nx
 nu = sys.nu
 ny = sys.ny
@@ -34,21 +34,9 @@ Y = test_data.wy
 U = test_data.u
 Z = Y[sens,:]
 
-# Load sparse model
-[sys, C, Qe, Re, sens] = pickle.load(open('model.p', 'rb'))
-nx = sys.nx
-nu = sys.nu
-ny = sys.ny
-nz = C.shape[0]
-
 # LQR weights
-#Qr = np.diag([0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0]) * 1.0e-0 
-#Qr = np.diag([0, 0, 0, 0, 1, 1, 0, 0, 0, 0]) * 1.0e-0 
-Qr = np.diag([0, 0, 0, 0, 1, 1, 0, 0]) * 1.0e0
-#Qr = np.diag([0, 0, 1, 1, 0, 0]) * 1.0e-0
-#Qr = np.diag([1, 1, 0, 0]) * 1.0e-0
-#Qr = np.diag([1, 1, 0]) * 1.0e-0
-Rr = 1.0e+4 * np.eye(nu)
+Qr = np.diag([0, 0, 0, 0, 1, 1, 0, 0])
+Rr = 1.0e+4
 
 # Initialize lqg controller/estimator
 controller = lqg.lqg(sys.A, sys.B, C, Qr, Rr, Qe, Re)
@@ -58,7 +46,6 @@ pickle.dump(controller, open('dns_controller_data/controller.p', 'wb'))
 x_best = np.linalg.pinv(sys.C) @ Y
 
 # Test: estimate x from measurements Z
-#nsteps = Y.shape[1]
 # Initial values
 x_init = np.zeros(nx, dtype=complex)
 P_init = np.eye(nx, dtype=complex)
@@ -76,7 +63,6 @@ u_star = np.zeros((nu,nsteps))
 
 for k in range(nsteps-1):
     u_star[:,k] = controller.lqr(x_hat[:,k])
-#   u_star[:,k] = controller.lqr(x_best[:,k])
     x_hat[:,k+1], P[:,:,k+1] = controller.lqe(x_hat[:,k], u_star[:,k],  P[:,:,k], Z[:,k+1])
 
 est_error = np.linalg.norm(x_hat - x_best, ord=2, axis=0) / np.linalg.norm(x_best, ord=2, axis=0)
@@ -86,8 +72,6 @@ P_det.shape
 
 
 Ts = 5
-print(np.abs(np.angle(np.diag(sys.A)))/(2.0*np.pi*Ts))
-print(np.abs(x_best[:,0]))
 
 """
 ##########################
@@ -159,8 +143,6 @@ plt.show()
 
 
 """
-
-
 
 
 
