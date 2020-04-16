@@ -34,7 +34,7 @@ sys_i = 49
 case_name = "gamma_lqg_8_modes_R4"
 
 # Load DNS data
-nsteps = 4500
+nsteps = 8500
 nu = model.nu
 
 grid_full = data_loader.grid(case_name, skip_points=1)
@@ -171,7 +171,7 @@ axs.set_xlabel('$kT_s$')
 axs.set_ylabel('$u(k)$')
 axs.set_xlim([0,nsteps*Ts])
 axs.set_ylim([-1, 1])
-axs.set_xticks(np.arange(0, nsteps*Ts + 0.01, 5))
+axs.set_xticks(np.arange(0, nsteps*Ts + 0.01, 10))
 axs.set_yticks(np.arange(-1, 1.01, 0.5))
 plt.grid(True)
 plt.savefig('/Users/atsol/research/papers/dmdcsp-paper/figures/optimal_input.eps')
@@ -191,7 +191,7 @@ axs.set_axisbelow(True)
 axs.set_xlabel('$kT_s$')
 axs.set_ylabel('$z_1(k)$')
 axs.set_xlim([0,nsteps*Ts])
-axs.set_xticks(np.arange(0, nsteps*Ts + 0.01, 5))
+axs.set_xticks(np.arange(0, nsteps*Ts + 0.01, 10))
 axs.set_yticks(np.arange(-8, 8.01, 4))
 plt.grid(True)
 plt.savefig('/Users/atsol/research/papers/dmdcsp-paper/figures/measurement_2.eps')
@@ -240,7 +240,7 @@ axs.set_xlabel('$kT_s$')
 axs.set_ylabel('$e_y(k),\, \%$')
 axs.set_xlim([0,nsteps*Ts])
 axs.set_ylim([0,100])
-axs.set_xticks(np.arange(0, nsteps*Ts + 0.01, 5))
+axs.set_xticks(np.arange(0, nsteps*Ts + 0.01, 10))
 axs.set_yticks(np.arange(0, 101, 25))
 plt.grid(True)
 plt.savefig('/Users/atsol/research/papers/dmdcsp-paper/figures/output_error.eps')
