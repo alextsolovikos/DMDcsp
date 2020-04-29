@@ -1,5 +1,5 @@
 # DMDcsp
-Code developed for the paper *"Estimation and Control of Fluid Systems Using Sparsity-Promoting Dynamic Mode Decomposition with Control"* by Alex Tsolovikos, Efstathios Bakolas, Saikishan Suryanarayanan, and David Goldstein.
+Code developed for the paper *"Estimation and Control of Fluid Flows Using Sparsity-Promoting Dynamic Mode Decomposition"* by Alex Tsolovikos, Efstathios Bakolas, Saikishan Suryanarayanan, and David Goldstein.
 
 ### Abstract:
 
