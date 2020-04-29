@@ -6,6 +6,7 @@ from matplotlib import animation
 from matplotlib import patches
 import time
 from scipy import signal
+import h5py
 
 # Class defining the snapshot grid
 class grid(object):
@@ -13,7 +14,10 @@ class grid(object):
         print('\nReading shapshot grid:')
 
         # Grid data - Load full grid
-        grid_full = np.load('data/' + case_name + '-grid.npy')
+        dataset = h5py.File('data/' + case_name + '.h5', 'r')
+        grid_full = dataset['grid'][:]
+        dataset.close()
+       #grid_full = np.load('data/' + case_name + '-grid.npy')
         npx_full = np.unique(grid_full[:,0]).shape[0]
         npz_full = np.unique(grid_full[:,2]).shape[0]
         npoints_full = npx_full*npz_full
@@ -83,8 +87,12 @@ class flow_data(object):
         self.npx = grid.npx
         self.npz = grid.npz
 
+        # Load dataset
+        dataset = h5py.File('data/' + case_name + '.h5', 'r')
+
         # Input data
-        u = np.load('data/' + case_name + '-input.npy')
+        u = dataset['u'][:]
+       #u = np.load('data/' + case_name + '-input.npy')
         self.ptotal = u.shape[1] # Number of snapshots
         self.u = u[:,start:end:timestep_skip]
         self.nu = u.shape[0] # Number of inputs
@@ -95,7 +103,11 @@ class flow_data(object):
         # Flow data
         self.timestep_skip = timestep_skip
         self.p = (end - start)//timestep_skip # Number of snapshots available
-        self.wy = np.load('data/' + case_name + '-wy.npy')[self.idx,start:end:timestep_skip]
+        self.wy = dataset['wy'][self.idx,start:end:timestep_skip]
+       #self.wy = np.load('data/' + case_name + '-wy.npy')[self.idx,start:end:timestep_skip]
+
+        # Close dataset
+        dataset.close()
 
         # Time series
         self.t = np.expand_dims(np.array(range(self.p)), axis=0)

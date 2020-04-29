@@ -7,6 +7,7 @@ plt.rc('text', usetex=True)
 plt.rc('font', size=16)
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 import pickle
+import h5py
 
 # Custom libraries
 import data_loader
@@ -31,7 +32,7 @@ Ploss_uq = Ploss[indices]
 
 # Choose data to plot
 sys_i = 49
-case_name = "gamma_lqg_8_modes_R4"
+case_name = "controlled_flow_data"
 
 # Load DNS data
 nsteps = 8500
@@ -65,9 +66,18 @@ y_error = np.linalg.norm(y_hat - Y, ord=2, axis=0) / np.linalg.norm(Y, ord=2, ax
 
 
 # Load Tecplot data
-wy_data_0 = np.loadtxt('data/timestep_1.txt', skiprows=1)
-wy_data_1 = np.loadtxt('data/timestep_2.txt', skiprows=1)
-wy_data_2 = np.loadtxt('data/timestep_3.txt', skiprows=1)
+full_dataset = h5py.File('data/controlled_flow_full_flowfield.h5', 'r')
+wy_data_0 = full_dataset['timestep_0'][:]
+wy_data_1 = full_dataset['timestep_1'][:]
+wy_data_2 = full_dataset['timestep_2'][:]
+#wy_data_0 = np.loadtxt('unused_data/timestep_1.txt', skiprows=1)
+#wy_data_1 = np.loadtxt('unused_data/timestep_2.txt', skiprows=1)
+#wy_data_2 = np.loadtxt('unused_data/timestep_3.txt', skiprows=1)
+#full_dataset = h5py.File('data/full_flowfield.h5', 'w')
+#full_dataset.create_dataset('timestep_0', data=wy_data_0)
+#full_dataset.create_dataset('timestep_1', data=wy_data_1)
+#full_dataset.create_dataset('timestep_2', data=wy_data_2)
+#full_dataset.close()
 
 
 m_size = 50

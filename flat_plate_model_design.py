@@ -14,7 +14,7 @@ import dmdcsp
 
 
 # Import training data
-training_case = "training_4"
+training_case = "training_data"
 grid_full = data_loader.grid(training_case, skip_points=1)
 train_data = data_loader.flow_data(grid_full, training_case, timestep_skip=1, start=0, end=1500)
 

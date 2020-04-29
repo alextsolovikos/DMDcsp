@@ -5,8 +5,8 @@ import copy
 import pickle
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
-plt.rc('text', usetex=True)
-plt.rc('font', size=24)
+#plt.rc('text', usetex=True)
+#plt.rc('font', size=24)
 
 # Custom libraries
 import dmdcsp
@@ -24,9 +24,7 @@ nz = C.shape[0]
 nsteps = 8000
 
 # Test data
-#test_case = "zero_input"
-#test_case = "beta_lqg_6_modes"
-test_case = "gamma_lqg_8_modes_R4"
+test_case = "controlled_flow_data"
 grid_full = data_loader.grid(test_case, skip_points=1)
 test_data = data_loader.flow_data(grid_full, test_case, timestep_skip=1, start=0, end=nsteps)
 
@@ -92,7 +90,7 @@ for i in mode_i:
     axs.plot(np.real(x_hat[i,:nsteps]), linestyle='dashed')
 
 axs.set_axisbelow(True)
-axs.set_xlabel('Time step $k$')
+axs.set_xlabel('Time step k')
 axs.set_ylabel('Mode amplitude')
 plt.grid(True)
 #plt.savefig('/Users/atsol/research/papers/AIAA-MPC-of-LSMS/figures/case_3_inputs.eps')
@@ -110,14 +108,15 @@ plt.subplots_adjust(hspace=0.6, left=0.18, right=0.95, top=0.95, bottom=0.18)
 
 axs.plot(u_star[0,:], c = 'k', label='optimal input')
 axs.plot(U[0,:nsteps], c = 'r', linestyle='dashed', label='dns input')
-axs.plot(Z[0]/10., c = 'b', linestyle='dotted', label='z_0/10')
-axs.plot(est_error, c = 'b', label='x_error')
-axs.plot(y_error, c = 'b', linestyle='dashed', label='y_error')
+axs.plot(Z[0]/10., c = 'b', linestyle='dotted', label='z')
+#axs.plot(est_error, c = 'b', linestyle='dashed', label='x-error')
+axs.plot(y_error, c = 'b', label='y-error')
 #axs.legend()
 
 axs.set_axisbelow(True)
-axs.set_xlabel('Time step $k$')
+axs.set_xlabel('Time step k')
 axs.set_ylabel('Input')
+axs.legend(loc='lower right')
 plt.grid(True)
 
 plt.show()
@@ -133,7 +132,7 @@ plt.subplots_adjust(hspace=0.6, left=0.18, right=0.95, top=0.95, bottom=0.18)
 axs.plot(est_error*100, c = 'k')
 
 axs.set_axisbelow(True)
-axs.set_xlabel('Time step $k$')
+axs.set_xlabel('Time step k')
 axs.set_ylabel('Error (%%)')
 plt.grid(True)
 #plt.savefig('/Users/atsol/research/papers/AIAA-MPC-of-LSMS/figures/case_3_inputs.eps')
