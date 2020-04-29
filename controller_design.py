@@ -21,7 +21,7 @@ nu = sys.nu
 ny = sys.ny
 nz = C.shape[0]
 
-nsteps = 4000
+nsteps = 8000
 
 # Test data
 #test_case = "zero_input"
@@ -36,7 +36,7 @@ Z = Y[sens,:]
 
 # LQR weights
 Qr = np.diag([0, 0, 0, 0, 1, 1, 0, 0])
-Rr = 1.0e+4 * np.eye(nu)
+Rr = 5.0e+3 * np.eye(nu)
 
 # Initialize lqg controller/estimator
 controller = lqg.lqg(sys.A, sys.B, C, Qr, Rr, Qe, Re)
@@ -112,7 +112,8 @@ axs.plot(u_star[0,:], c = 'k', label='optimal input')
 axs.plot(U[0,:nsteps], c = 'r', linestyle='dashed', label='dns input')
 axs.plot(Z[0]/10., c = 'b', linestyle='dotted', label='z_0/10')
 axs.plot(est_error, c = 'b', label='x_error')
-axs.plot(y_error, c = 'b', linestyle='dashed', label='x_error')
+axs.plot(y_error, c = 'b', linestyle='dashed', label='y_error')
+#axs.legend()
 
 axs.set_axisbelow(True)
 axs.set_xlabel('Time step $k$')

@@ -33,10 +33,10 @@ Y0 = train_data.wy[:,:-1]
 Y1 = train_data.wy[:,1:]
 U0 = train_data.u[:,:-1]
 
-nx = 30 # Number of POD modes to keep
+q = 30 # Number of POD modes to keep
 
 # Full dmdc model
-model = dmdcsp.dmdcsp(Y0, Y1, U0, nx=nx)
+model = dmdcsp.dmdcsp(Y0, Y1, U0, q=q)
 
 
 """
@@ -45,10 +45,11 @@ model = dmdcsp.dmdcsp(Y0, Y1, U0, nx=nx)
 num = 100
 niter = 5
 gamma = np.logspace(2.0, 6.7, num=num)
+#gamma = np.logspace(4.0, 5.0, num=num)
 
 stats = model.sparse_batch(gamma, niter)
 
-order = stats['nr']
+order = stats['nx']
 Ploss = stats['P_loss']
 z0 = stats['z_0']
 
@@ -58,7 +59,7 @@ Ploss_uq = Ploss[indices]
 # Choose model
 sys_i = int(input('Choose the sparse model id to use: '))
 
-nr = stats['nr'][sys_i]
+nx = stats['nx'][sys_i]
 
 # Print covariances
 C, Qe, Re = model.compute_noise_cov(sys_i, sens)
@@ -75,11 +76,11 @@ print(Re)
 print('eig(Re)')
 print(np.linalg.eig(Re)[0])
 
-print('\nRank of observability matrix: %d of %d' % (np.linalg.matrix_rank(control.obsv(model.rsys[sys_i].A, C)), nr))
+print('\nRank of observability matrix: %d of %d' % (np.linalg.matrix_rank(control.obsv(model.rsys[sys_i].A, C)), nx))
 
 Ts = 5
 print('Mode frequencies:')
-print(np.abs(np.angle(np.diag(model.rsys[sys_i].A)))/(2.0*np.pi*Ts))
+print(np.abs(np.angle(np.diag(model.sys_eig[sys_i])))/(2.0*np.pi*Ts))
 
 """
     Save full model & final model
@@ -113,14 +114,12 @@ axs.set_ylabel('Percentage Loss, \%')
 plt.grid(True)
 #plt.savefig('/Users/atsol/research/papers/AIAA-MPC-of-LSMS/figures/case_3_inputs.eps')
 
-plt.show()
-
 
 ##########################
 # Plot eigenvalues
 ##########################
 lamb = np.diag(model.Lambda)
-lamb_sp = np.diag(model.rsys[sys_i].A)
+lamb_sp = np.diag(model.sys_eig[sys_i])
 fig, axs = plt.subplots(1, figsize=(7,5), facecolor='w', edgecolor='k')
 plt.subplots_adjust(hspace=0.6, left=0.22, right=0.95, top=0.95, bottom=0.18)
 
@@ -145,18 +144,19 @@ plt.grid(True)
 plt.show()
 
 
+"""
 ##########################
 # Plot frequencies
 ##########################
 #freq = np.imag(np.log(np.diag(model.Lambda)))
 # Full system
 Ts = 5.0
-freq = np.abs(np.angle(np.diag(model.rsys[0].A)))/(2.0*np.pi)/Ts
+freq = np.abs(np.angle(np.diag(model.sys_eig[0])))/(2.0*np.pi)/Ts
 ampl = np.abs(z0[0])
 
 # Sparse system
-freq_sp = np.abs(np.angle(np.diag(model.rsys[sys_i].A)))/(2.0*np.pi)/Ts
-ampl_sp = np.abs(z0[sys_i][:nx])
+freq_sp = np.abs(np.angle(np.diag(model.sys_eig[sys_i])))/(2.0*np.pi)/Ts
+ampl_sp = np.abs(z0[sys_i][:q])
 
 fig, axs = plt.subplots(1, figsize=(7,5), facecolor='w', edgecolor='k')
 plt.subplots_adjust(hspace=0.6, left=0.22, right=0.95, top=0.95, bottom=0.18)
@@ -173,3 +173,4 @@ plt.grid(True)
 
 plt.show()
 
+"""

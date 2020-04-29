@@ -21,7 +21,7 @@ model = pickle.load(open('model_full.p', 'rb'))
 # Load controller
 controller = pickle.load(open('dns_controller_data/controller.p', 'rb'))
 
-order = model.sp_stats['nr']
+order = model.sp_stats['nx']
 Ploss = model.sp_stats['P_loss']
 z0 = model.sp_stats['z_0']
 nx = sys.nx
@@ -98,7 +98,7 @@ plt.savefig('/Users/atsol/research/papers/dmdcsp-paper/figures/Ploss.eps')
 # Plot eigenvalues
 ##########################
 lamb = np.diag(model.Lambda)
-lamb_sp = np.diag(sys.A)
+lamb_sp = model.sys_eig[sys_i]
 print('eigenvalue magnitudes:')
 print(np.abs(lamb_sp))
 fig, axs = plt.subplots(1, figsize=(6,4), facecolor='w', edgecolor='k')
@@ -132,11 +132,11 @@ plt.savefig('/Users/atsol/research/papers/dmdcsp-paper/figures/eigenvalues.eps')
 Ts = 5.0 * 0.00125
 
 # Full system
-freq = np.abs(np.imag(np.log(np.diag(model.rsys[0].A)))/(2.0*np.pi)/Ts)
+freq = np.abs(np.imag(np.log(lamb))/(2.0*np.pi)/Ts)
 ampl = np.abs(z0[0])
 
 # Sparse system
-freq_sp = np.abs(np.imag(np.log(np.diag(model.rsys[sys_i].A)))/(2.0*np.pi)/Ts)
+freq_sp = np.abs(np.imag(np.log(lamb_sp))/(2.0*np.pi)/Ts)
 ampl_sp = np.abs(z0[sys_i][:nx])
 print(freq_sp)
 print(ampl_sp)
@@ -160,7 +160,7 @@ plt.savefig('/Users/atsol/research/papers/dmdcsp-paper/figures/amplitudes.eps')
 ##########################
 # Plot optimal input
 ##########################
-fig, axs = plt.subplots(1, figsize=(6,3), facecolor='w', edgecolor='k')
+fig, axs = plt.subplots(1, figsize=(6,4), facecolor='w', edgecolor='k')
 plt.subplots_adjust(hspace=0.6, left=0.2, right=0.95, top=0.95, bottom=0.3)
 
 t = np.arange(0,nsteps,1)*Ts
@@ -181,7 +181,7 @@ plt.savefig('/Users/atsol/research/papers/dmdcsp-paper/figures/optimal_input.eps
 ##########################
 # Plot sensor meas.
 ##########################
-fig, axs = plt.subplots(1, figsize=(6,3), facecolor='w', edgecolor='k')
+fig, axs = plt.subplots(1, figsize=(6,4), facecolor='w', edgecolor='k')
 plt.subplots_adjust(hspace=0.6, left=0.2, right=0.95, top=0.95, bottom=0.3)
 
 t = np.arange(0,nsteps,1)*Ts
@@ -229,7 +229,7 @@ plt.savefig('/Users/atsol/research/papers/dmdcsp-paper/figures/optimal_input_and
 ##########################
 # Plot estimation errors
 ##########################
-fig, axs = plt.subplots(1, figsize=(6,3), facecolor='w', edgecolor='k')
+fig, axs = plt.subplots(1, figsize=(6,4), facecolor='w', edgecolor='k')
 plt.subplots_adjust(hspace=0.6, left=0.2, right=0.95, top=0.95, bottom=0.3)
 
 t = np.arange(0,nsteps,1)*Ts
