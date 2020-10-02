@@ -18,18 +18,18 @@ The results of this paper can be retrieved as follows:
 > source env/bin/activate
 3. Install requirements:
 > pip install requirements.txt
-4. Run DMDcsp and select the order of the model (#49 is used in the paper)
+4. Run DMDcsp and select the order of the model at the prompt (e.g. 49 is used in the paper)
     - Run:
 > python src/flat_plate_model_design.py
-    - At the prompt, select the order of the sparse model (e.g. 49)
-5. Reconstruct the controller input to the dns simulator (the flow has been precomputed)
+5. Reconstruct the control input used in the dns simulator (the flow has been precomputed)
 > python src/controller_design.py
 6. Retireve plots:
 > python src/paper_plots.py
 
 
-### Useful functions:
-- 'src/DMDcsp.py'
+### Useful scripts:
+- DMDcsp class:
+> src/DMDcsp.py
 
 
 ### Results:
