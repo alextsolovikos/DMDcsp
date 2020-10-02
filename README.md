@@ -18,8 +18,7 @@ The results of this paper can be retrieved as follows:
 > source env/bin/activate
 3. Install requirements:
 > pip install requirements.txt
-4. Run DMDcsp and select the order of the model at the prompt (e.g. 49 is used in the paper)
-    - Run:
+4. Run DMDcsp and select the order of the model at the prompt (e.g. 49 is used in the paper):
 > python src/flat_plate_model_design.py
 5. Reconstruct the control input used in the dns simulator (the flow has been precomputed)
 > python src/controller_design.py
