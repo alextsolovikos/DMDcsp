@@ -1,7 +1,5 @@
-certifi==2020.6.20
 control==0.8.3
 cvxpy==1.1.5
-cycler==0.10.0
 ecos==2.0.7.post1
 future==0.18.2
 h5py==2.10.0
@@ -9,9 +7,6 @@ kiwisolver==1.2.0
 matplotlib==3.3.2
 numpy==1.19.2
 osqp==0.6.1
-Pillow==8.1.1
-pyparsing==2.4.7
-python-dateutil==2.8.1
 scipy==1.5.2
 scs==2.1.2
 six==1.15.0
