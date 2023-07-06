@@ -7,6 +7,6 @@ kiwisolver==1.2.0
 matplotlib==3.3.2
 numpy==1.22.0
 osqp==0.6.1
-scipy==1.5.2
+scipy==1.10.0
 scs==2.1.2
 six==1.15.0
